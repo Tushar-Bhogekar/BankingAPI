@@ -26,6 +26,14 @@ steps:
 - script: dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
   displayName: Publish project
 
+- task: CopyFiles@2
+  displayName: Deploy to IIS folder
+  inputs:
+    SourceFolder: '$(Build.ArtifactStagingDirectory)'
+    Contents: '**'
+    TargetFolder: 'C:\inetpub\bankingapp'
+
+
 - task: PublishBuildArtifacts@1
   inputs:
     pathToPublish: '$(Build.ArtifactStagingDirectory)'
