@@ -7,37 +7,41 @@ pool:
 variables:
   buildConfiguration: 'Release'
 
-steps:
+jobs:
+- job: BuildAndDeploy
+  workspace:
+    clean: all
 
-- task: UseDotNet@2
-  inputs:
-    packageType: 'sdk'
-    version: '9.0.x'
+  steps:
 
-- script: dotnet restore
-  displayName: Restore dependencies
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '9.0.x'
 
-- script: dotnet build --configuration $(buildConfiguration)
-  displayName: Build project
+  - script: dotnet restore
+    displayName: Restore dependencies
 
-- script: dotnet test --no-build
-  displayName: Run tests
+  - script: dotnet build --configuration $(buildConfiguration)
+    displayName: Build project
 
-- script: dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
-  displayName: Publish project
+  - script: dotnet test --no-build
+    displayName: Run tests
 
-- task: CopyFiles@2
-  displayName: Deploy to IIS folder
-  inputs:
-    SourceFolder: '$(Build.ArtifactStagingDirectory)'
-    Contents: '**'
-    TargetFolder: 'C:\inetpub\bankingapp'
+  - script: dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
+    displayName: Publish project
 
+  - task: CopyFiles@2
+    displayName: Deploy to IIS folder
+    inputs:
+      SourceFolder: '$(Build.ArtifactStagingDirectory)'
+      Contents: '**'
+      TargetFolder: 'C:\inetpub\bankingapp'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathToPublish: '$(Build.ArtifactStagingDirectory)'
-    artifactName: 'drop'
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: 'drop'
 
-- script: iisreset
-  displayName: Restart IIS
+  - script: iisreset
+    displayName: Restart IIS
