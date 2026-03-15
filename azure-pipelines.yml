@@ -38,3 +38,6 @@ steps:
   inputs:
     pathToPublish: '$(Build.ArtifactStagingDirectory)'
     artifactName: 'drop'
+
+- script: iisreset
+  displayName: Restart IIS
