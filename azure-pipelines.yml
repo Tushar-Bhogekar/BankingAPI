@@ -23,3 +23,6 @@ steps:
 
 - script: dotnet test --no-build --configuration $(buildConfiguration)
   displayName: 'Run tests'
+
+- script: dotnet publish --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)
+  displayName: 'Publish application'
