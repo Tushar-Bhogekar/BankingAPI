@@ -4,6 +4,19 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+variables:
+  buildConfiguration: 'Release'
+
 steps:
-- script: echo "Hello Azure DevOps!"
-  displayName: 'Test Pipeline'
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 9 SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '9.0.x'
+
+- script: dotnet restore
+  displayName: 'Restore dependencies'
+
+- script: dotnet build --configuration $(buildConfiguration) --no-restore
+  displayName: 'Build application'
