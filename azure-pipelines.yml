@@ -42,3 +42,31 @@ stages:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'BankingAPI'
         publishLocation: 'Container'
+
+- stage: CD
+  displayName: 'Continuous Deployment'
+
+  dependsOn: CI
+
+  jobs:
+  - job: Deploy
+    displayName: 'Deploy BankingAPI'
+
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+
+    - task: DownloadBuildArtifacts@1
+      displayName: 'Download BankingAPI Artifact'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'BankingAPI'
+        downloadPath: '$(Pipeline.Workspace)'
+
+    - script: |
+        echo "Deployment package downloaded successfully."
+        echo "Contents:"
+        ls -R $(Pipeline.Workspace)/BankingAPI
+      displayName: 'Verify deployment package'
