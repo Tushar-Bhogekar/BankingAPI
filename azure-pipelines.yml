@@ -1,47 +1,72 @@
 trigger:
 - main
 
-pool:
-  name: Default
-
 variables:
   buildConfiguration: 'Release'
 
-jobs:
-- job: BuildAndDeploy
-  workspace:
-    clean: all
+stages:
 
-  steps:
+- stage: CI
+  displayName: 'Continuous Integration'
 
-  - task: UseDotNet@2
-    inputs:
-      packageType: 'sdk'
-      version: '9.0.x'
+  jobs:
+  - job: Build
+    displayName: 'Build and Test'
 
-  - script: dotnet restore
-    displayName: Restore dependencies
+    pool:
+      vmImage: 'ubuntu-latest'
 
-  - script: dotnet build --configuration $(buildConfiguration)
-    displayName: Build project
+    steps:
 
-  - script: dotnet test --no-build
-    displayName: Run tests
+    - task: UseDotNet@2
+      displayName: 'Install .NET 9 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '9.0.x'
 
-  - script: dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
-    displayName: Publish project
+    - script: dotnet restore
+      displayName: 'Restore dependencies'
 
-  - task: CopyFiles@2
-    displayName: Deploy to IIS folder
-    inputs:
-      SourceFolder: '$(Build.ArtifactStagingDirectory)'
-      Contents: '**'
-      TargetFolder: 'C:\inetpub\bankingapp'
+    - script: dotnet build --configuration $(buildConfiguration) --no-restore
+      displayName: 'Build application'
 
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathToPublish: '$(Build.ArtifactStagingDirectory)'
-      artifactName: 'drop'
+    - script: dotnet test --no-build --configuration $(buildConfiguration)
+      displayName: 'Run tests'
 
-  - script: iisreset
-    displayName: Restart IIS
+    - script: dotnet publish --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)
+      displayName: 'Publish application'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Build Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'BankingAPI'
+        publishLocation: 'Container'
+
+- stage: CD
+  displayName: 'Continuous Deployment'
+
+  dependsOn: CI
+
+  jobs:
+  - job: Deploy
+    displayName: 'Deploy BankingAPI'
+
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+
+    - task: DownloadBuildArtifacts@1
+      displayName: 'Download BankingAPI Artifact'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'BankingAPI'
+        downloadPath: '$(Pipeline.Workspace)'
+
+    - script: |
+        echo "Deployment package downloaded successfully."
+        echo "Contents:"
+        ls -R $(Pipeline.Workspace)/BankingAPI
+      displayName: 'Verify deployment package'
