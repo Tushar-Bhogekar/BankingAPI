@@ -1,35 +1,44 @@
 trigger:
 - main
 
-pool:
-  vmImage: 'ubuntu-latest'
-
 variables:
   buildConfiguration: 'Release'
 
-steps:
+stages:
 
-- task: UseDotNet@2
-  displayName: 'Install .NET 9 SDK'
-  inputs:
-    packageType: 'sdk'
-    version: '9.0.x'
+- stage: CI
+  displayName: 'Continuous Integration'
 
-- script: dotnet restore
-  displayName: 'Restore dependencies'
+  jobs:
+  - job: Build
+    displayName: 'Build and Test'
 
-- script: dotnet build --configuration $(buildConfiguration) --no-restore
-  displayName: 'Build application'
+    pool:
+      vmImage: 'ubuntu-latest'
 
-- script: dotnet test --no-build --configuration $(buildConfiguration)
-  displayName: 'Run tests'
+    steps:
 
-- script: dotnet publish --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)
-  displayName: 'Publish application'
+    - task: UseDotNet@2
+      displayName: 'Install .NET 9 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '9.0.x'
 
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Build Artifact'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'BankingAPI'
-    publishLocation: 'Container'
+    - script: dotnet restore
+      displayName: 'Restore dependencies'
+
+    - script: dotnet build --configuration $(buildConfiguration) --no-restore
+      displayName: 'Build application'
+
+    - script: dotnet test --no-build --configuration $(buildConfiguration)
+      displayName: 'Run tests'
+
+    - script: dotnet publish --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)
+      displayName: 'Publish application'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Build Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'BankingAPI'
+        publishLocation: 'Container'
