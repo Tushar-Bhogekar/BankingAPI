@@ -16,6 +16,16 @@ namespace BankingAPI.Controllers
             _userRepository = userRepository;
         }
 
+        [HttpGet("health")]
+        public IActionResult Health()
+        {
+            return Ok(new
+            {
+                status = "UP",
+                service = "Internet Banking API"
+            });
+        }
+
         [Authorize]
         [HttpPost("register-internet-banking")]
         public IActionResult RegisterInternetBanking([FromBody] InternetBankingRegistrationDto registrationDto)
